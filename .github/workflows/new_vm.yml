@@ -79,7 +79,7 @@ jobs:
             --zone ru-central1-a \
             --public-ip \
             --create-boot-disk \
-            size=30G,image-folder-id=standard-images,image-family=centos-stream-8 \
+            size=30G,image-folder-id=standard-images,image-family=almalinux-8 \
             --preemptible \
             --core-fraction 50 \
             --memory 8 \
