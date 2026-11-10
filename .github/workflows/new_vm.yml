@@ -28,17 +28,22 @@ jobs:
 
       - name: Authenticate in Yandex Cloud
         env:
-          YC_SA_KEY_B64: ${{ secrets.YC_SA_KEY_B64 }}
+          YC_SA_KEY_JSON: ${{ secrets.YC_SA_KEY_JSON }}
           YC_CLOUD_ID: ${{ secrets.YC_CLOUD_ID }}
           YC_FOLDER_ID: ${{ secrets.YC_FOLDER_ID }}
         run: |
-          test -n "$YC_SA_KEY_B64" || {
-            echo "Secret YC_SA_KEY_B64 is empty"
+          test -n "$YC_SA_KEY_JSON" || {
+            echo "Secret YC_SA_KEY_JSON is empty"
             exit 1
           }
 
-          echo "$YC_SA_KEY_B64" | base64 --decode > "$HOME/sa-key.json"
+          printf '%s' "$YC_SA_KEY_JSON" > "$HOME/sa-key.json"
           chmod 600 "$HOME/sa-key.json"
+
+          python3 -m json.tool "$HOME/sa-key.json" > /dev/null || {
+            echo "YC_SA_KEY_JSON is not valid JSON"
+            exit 1
+          }
 
           "$YC_BIN" auth activate-service-account \
             --key-file "$HOME/sa-key.json"
@@ -72,8 +77,7 @@ jobs:
             --zone ru-central1-a \
             --public-ip \
             --create-boot-disk \
-            size=30G,image-folder-id=standard-images,\
-            image-family=centos-stream-8 \
+            size=30G,image-folder-id=standard-images,image-family=centos-stream-8 \
             --preemptible \
             --core-fraction 50 \
             --memory 8 \
@@ -194,6 +198,15 @@ jobs:
             -t -t \
             "yc-user@$(cat cache/addr)" \
             < before.sh
+
+      - name: Check download helper on VM
+        run: |
+          ssh \
+            -i "$SSH_KEY" \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            "yc-user@$(cat cache/addr)" \
+            'find "$HOME" -name "dl-cloud-mail-ru.sh" -type f -print'
 
       - name: Run download script on VM
         run: |
