@@ -45,11 +45,13 @@ jobs:
             exit 1
           }
 
-          "$YC_BIN" auth activate-service-account \
-            --key-file "$HOME/sa-key.json"
+          "$YC_BIN" config set service-account-key \
+            "$HOME/sa-key.json"
 
           "$YC_BIN" config set cloud-id "$YC_CLOUD_ID"
           "$YC_BIN" config set folder-id "$YC_FOLDER_ID"
+
+          "$YC_BIN" compute instance list
 
       - name: Show existing compute instances
         run: |
